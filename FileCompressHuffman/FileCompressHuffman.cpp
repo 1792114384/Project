@@ -170,7 +170,6 @@ void FileCompressHuffman::GetFileInfo(FILE* fOut, string& FilePath)
 			fputc('\n', fOut);
 		}
 	}
-	//fwrite(&buf, sizeof(unsigned char), buf.size(), fOut);
 }
 
 //处理压缩后的数据
