@@ -161,7 +161,7 @@ void FileCompressHuffman::GetFileInfo(FILE* fOut, string& FilePath)
 	{
 		if (info[i]._chCount != 0)
 		{
-			string buf;  //buf中存放  字符，次数
+			string buf;  //buf中存放  ，次数
 			fputc(info[i]._ch, fOut);//必须先把ch放进去，如果把ch作为string的字符最后转换为C的字符，会导致'\0'没有处理
 			buf = ',';
 			_itoa(info[i]._chCount, countStr, 10);
