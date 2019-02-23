@@ -9,6 +9,7 @@ using namespace std;
 //压缩文件
 void FileCompressHuffman::CompressFile(string& FilePath)
 {
+	//以二进制的文件打开
 	FILE* FIn = fopen(FilePath.c_str(), "rb");
 	if (nullptr == FIn)
 	{
@@ -34,7 +35,6 @@ void FileCompressHuffman::CompressFile(string& FilePath)
 	HuffmanTree<CharInfo> hT(info, 0);
 	//获取编码
 	GetCode(hT.GetRoot());
-
 	//获取文件名
 	string FileName = GetFileName(FilePath);
 	FileName += ".Hzip";
@@ -73,7 +73,7 @@ void FileCompressHuffman::UnCompressFile(string& FilePath)
 	string FileSuffixName;
 	GetHead(fIn, FileSuffixName);
 	FileName += FileSuffixName;
-	FileName += 'H';
+	FileName += 'H'; //加H是为了和原文件区别
 	FILE* fOut = fopen(FileName.c_str(), "wb");
 	if (fOut == nullptr)
 	{
@@ -86,6 +86,7 @@ void FileCompressHuffman::UnCompressFile(string& FilePath)
 	}
 	//重建Huffman树
 	HuffmanTree<CharInfo> hT(info, 0);
+	//编码转换为字节
 	CodeToData(fIn, fOut, hT.GetRoot());
 
 	fclose(fIn);
@@ -141,27 +142,35 @@ void FileCompressHuffman::GetFileInfo(FILE* fOut, string& FilePath)
 	FileSuffixName += '\n';
 	fputs(FileSuffixName.c_str(), fOut);
 	int cnt = 0;  //总字符个数（不同的字符）
-	string buf;  //buf中存放  字符，次数
+	
 	unsigned char tmp[50];
 	for (size_t i = 0; i < 256; i++)
 	{
 		if (info[i]._chCount != 0)
 		{
 			cnt++;
-			buf += info[i]._ch;
-			buf += ',';
-			sprintf((char *)tmp, "%lld", info[i]._chCount);
-			buf += (char *)tmp;
-			buf += '\n';
 		}
 	}
-	
 	sprintf((char *)tmp, "%d", cnt);
 	string output;
 	output = (char *)tmp;
 	output += '\n';
 	fputs(output.c_str(), fOut);
-	fputs(buf.c_str(), fOut);
+	char countStr[20];
+	for (size_t i = 0; i < 256; i++)
+	{
+		if (info[i]._chCount != 0)
+		{
+			string buf;  //buf中存放  字符，次数
+			fputc(info[i]._ch, fOut);//必须先把ch放进去，如果把ch作为string的字符最后转换为C的字符，会导致'\0'没有处理
+			buf = ',';
+			_itoa(info[i]._chCount, countStr, 10);
+			buf += countStr;
+			fputs(buf.c_str(), fOut);
+			fputc('\n', fOut);
+		}
+	}
+	//fwrite(&buf, sizeof(unsigned char), buf.size(), fOut);
 }
 
 //处理压缩后的数据
@@ -173,6 +182,7 @@ void FileCompressHuffman::CompressData(FILE *fIn, FILE *fOut)
 	size_t out_idx = 0;
 	size_t n = 0; //n表示每次读到的字节数
 	size_t pos = 0; //表示当前一个字节有几个有效位
+	size_t count = 0;
 	do
 	{
 		size_t i = 0;
